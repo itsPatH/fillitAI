@@ -1,14 +1,47 @@
-import OpenAI from 'openai';
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  baseURL: "https://api.groq.com/openai/v1",
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// Hardening function
+function sanitize(value: any) {
+  return typeof value === "string"
+    ? value.replace(/[<>]/g, "").trim()
+    : value;
+}
 
 export async function generateFromOpenAI(prompt: string) {
-  const resp = await client.responses.create({ model: 'gpt-4o-mini', input: prompt, max_output_tokens: 600 });
-  const text = resp.output_text || resp.output?.[0]?.content?.[0]?.text || '';
+  const resp = await client.chat.completions.create({
+    model: "llama-3.1-8b-instant",
+    messages: [
+      {
+        role: "user",
+        // You MUST force DeepSeek to output pure JSON manually
+        content: `Return ONLY valid JSON. No text. No commentary. 
+        JSON for this prompt: ${prompt}`,
+      },
+    ],
+    max_tokens: 600,
+    temperature: 0, 
+  });
+
+  let raw = resp.choices[0]?.message?.content || "";
+
   try {
-    const parsed = JSON.parse(text);
+    const parsed = JSON.parse(raw);
+
+    Object.keys(parsed).forEach((key) => {
+      parsed[key] = sanitize(parsed[key]);
+    });
+
     return parsed;
   } catch {
-    // fallback: wrap plaintext into field_0
-    return { field_0: text, field_1: '', field_2: '' };
+    return {
+      field_0: sanitize(raw),
+      field_1: "",
+      field_2: "",
+    };
   }
 }

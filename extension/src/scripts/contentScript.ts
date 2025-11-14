@@ -1,4 +1,3 @@
-// contentScript.ts
 function findApplicationTextareas() {
   return Array.from(document.querySelectorAll('textarea, input'))
     .filter((el) => {
