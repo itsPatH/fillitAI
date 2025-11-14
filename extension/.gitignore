@@ -1,0 +1,16 @@
+# Build
+dist/
+build/
+compiled/
+*.zip
+
+# Chrome temporary files
+*.crx
+*.pem
+
+# Dependencies
+node_modules/
+
+# Secrets
+.env
+.env.*

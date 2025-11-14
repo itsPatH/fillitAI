@@ -1,0 +1,20 @@
+# Environment & Secrets
+.env
+.env.*
+*.key
+*.pem
+
+# Node
+node_modules/
+
+# Logs
+logs/
+*.log
+
+# Build
+dist/
+build/
+
+# Cache
+.cache/
+.tmp/

@@ -1,0 +1,13 @@
+# Normalize all text files to LF
+* text=auto eol=lf
+
+# Keep binary files untouched
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.zip binary
+*.crx binary
+*.pem binary
+*.key binary
