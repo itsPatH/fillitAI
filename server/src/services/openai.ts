@@ -12,36 +12,30 @@ function sanitize(value: any) {
     : value;
 }
 
-export async function generateFromOpenAI(prompt: string) {
+export async function generateFromOpenAI(userPrompt: string, systemPrompt?: string) {
+  
+  const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
+
+  if (systemPrompt) {
+    messages.push({ role: "system", content: systemPrompt });
+  }
+  messages.push({ role: "user", content: userPrompt });
+
   const resp = await client.chat.completions.create({
     model: "llama-3.1-8b-instant",
-    messages: [
-      {
-        role: "user",
-        // You MUST force DeepSeek to output pure JSON manually
-        content: `Return ONLY valid JSON. No text. No commentary. 
-        JSON for this prompt: ${prompt}`,
-      },
-    ],
+    messages: messages, 
     max_tokens: 600,
-    temperature: 0, 
-  });
+  }); 
 
   let raw = resp.choices[0]?.message?.content || "";
-
+  raw = raw.replace(/```(?:json)?|```/gi, "").trim();
+  const jsonMatch = raw.match(/\{[\s\S]*\}/);
+  const candidate = jsonMatch ? jsonMatch[0] : raw;
   try {
-    const parsed = JSON.parse(raw);
-
-    Object.keys(parsed).forEach((key) => {
-      parsed[key] = sanitize(parsed[key]);
-    });
-
+    const parsed = JSON.parse(candidate);
+    for (const k in parsed) { parsed[k] = sanitize(parsed[k]); }
     return parsed;
   } catch {
-    return {
-      field_0: sanitize(raw),
-      field_1: "",
-      field_2: "",
-    };
+    return { field_0: sanitize(candidate), field_1: "", field_2: "" };
   }
 }
